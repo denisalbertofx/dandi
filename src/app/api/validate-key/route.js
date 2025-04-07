@@ -47,15 +47,25 @@ export async function POST(request) {
       );
     }
 
-    // Usar el mismo servicio que usa la web
-    const { isValid, data, error } = await apiKeysService.validateKey(apiKey);
+    // Validación directa con Supabase
+    const { data, error } = await supabase
+      .from('api_keys')
+      .select('*')
+      .eq('key', apiKey)
+      .eq('is_active', true)
+      .maybeSingle();
 
-    if (!isValid) {
-      console.log('⚠️ API Key inválida:', error);
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error validando API key:', error);
+      throw error;
+    }
+
+    if (!data) {
+      console.log('⚠️ API Key inválida o no encontrada');
       return NextResponse.json(
         { 
           isValid: false,
-          error: error || 'API Key inválida o inactiva',
+          error: 'API Key inválida o inactiva',
           timestamp: new Date().toISOString()
         },
         { 
