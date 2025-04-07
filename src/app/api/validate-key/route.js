@@ -1,19 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-// Cliente de Supabase simple
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Faltan las variables de entorno de Supabase');
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    persistSession: false
-  }
-});
+import { getServerSupabaseClient } from '@/lib/supabase/server';
 
 // Configurar CORS headers
 const corsHeaders = {
@@ -32,8 +18,11 @@ export async function POST(request) {
     const { apiKey } = await request.json();
     
     if (!apiKey) {
-      return NextResponse.json({ isValid: false, error: 'API Key es requerida' }, { status: 400 });
+      return NextResponse.json({ isValid: false, error: 'API Key es requerida' }, { status: 400, headers: corsHeaders });
     }
+
+    // Obtener el cliente Supabase centralizado
+    const supabase = getServerSupabaseClient();
 
     // Validación simple de la API key
     const { data, error } = await supabase
@@ -48,14 +37,14 @@ export async function POST(request) {
         isValid: false, 
         error: 'Error al validar API key',
         details: error.message 
-      }, { status: 500 });
+      }, { status: 500, headers: corsHeaders });
     }
 
     if (!data) {
       return NextResponse.json({ 
         isValid: false, 
         error: 'API Key no encontrada' 
-      }, { status: 404 });
+      }, { status: 404, headers: corsHeaders });
     }
 
     return NextResponse.json({ 
@@ -65,7 +54,7 @@ export async function POST(request) {
         name: data.name,
         is_active: data.is_active
       }
-    });
+    }, { headers: corsHeaders });
 
   } catch (error) {
     console.error('Error inesperado:', error);
@@ -73,6 +62,6 @@ export async function POST(request) {
       isValid: false, 
       error: 'Error interno del servidor',
       details: error.message 
-    }, { status: 500 });
+    }, { status: 500, headers: corsHeaders });
   }
 }
