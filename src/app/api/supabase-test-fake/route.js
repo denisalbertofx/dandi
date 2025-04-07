@@ -3,15 +3,15 @@ import { createClient } from '@supabase/supabase-js';
 
 export async function GET() {
   try {
-    // Usar una URL real de Supabase pero con credenciales falsas
+    // Usar una URL real de Supabase con la nueva API key
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;  // URL real
-    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.fake.key';  // Key falsa pero con formato válido
+    const supabaseAnonKey = 'dk_K0RcR9uWz7YHLAtS1mTXzPClMkfeYD2K';  // Nueva API key
 
     const envStatus = {
       supabaseUrl: !!supabaseUrl,
       supabaseAnonKey: true,
       supabaseUrlLength: supabaseUrl?.length || 0,
-      supabaseAnonKeyLength: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.fake.key'.length
+      supabaseAnonKeyLength: supabaseAnonKey.length
     };
 
     // Si falta la URL, retornar error
@@ -24,12 +24,13 @@ export async function GET() {
       }, { status: 500 });
     }
 
-    console.log('Intentando conexión con credenciales falsas:', {
+    console.log('Intentando conexión con nueva API key:', {
       url: supabaseUrl,
-      keyLength: supabaseAnonKey.length
+      keyLength: supabaseAnonKey.length,
+      keyFormat: supabaseAnonKey.startsWith('dk_')
     });
 
-    // Crear cliente de Supabase con credenciales falsas
+    // Crear cliente de Supabase con la nueva key
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
     // Intentar una consulta simple
@@ -39,9 +40,10 @@ export async function GET() {
       .select('count');
     const duration = Date.now() - start;
 
-    console.log('Resultado de consulta con credenciales falsas:', {
+    console.log('Resultado de consulta con nueva API key:', {
       error,
-      duration
+      duration,
+      hasData: !!data
     });
 
     return NextResponse.json({
@@ -58,7 +60,7 @@ export async function GET() {
       }
     });
   } catch (error) {
-    console.error('Error en prueba de Supabase (fake):', error);
+    console.error('Error en prueba de Supabase con nueva API key:', error);
     return NextResponse.json({
       status: 'error',
       timestamp: new Date().toISOString(),
