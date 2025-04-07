@@ -1,26 +1,117 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@layer components {
+  .glass-card {
+    @apply bg-gray-800/20 backdrop-blur-xl 
+           border border-gray-700/30
+           transition-all duration-300;
+  }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  .text-gradient {
+    @apply bg-gradient-to-r from-white to-gray-400
+           bg-clip-text text-transparent;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  .text-subtle {
+    @apply text-gray-400 hover:text-gray-300 
+           transition-colors duration-200;
+  }
+
+  .hover-effect {
+    @apply hover:bg-gray-800/30
+           hover:shadow-lg hover:shadow-purple-500/10
+           transform hover:scale-[1.01]
+           transition-all duration-300;
   }
 }
 
+:root {
+  --foreground-rgb: 255, 255, 255;
+  --background-start: 17, 24, 39;
+  --background-end: 0, 0, 0;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(to bottom,
+    rgb(var(--background-start)),
+    rgb(var(--background-end)));
+  min-height: 100vh;
+}
+
+.gradient-text {
+  background: linear-gradient(to right, #6366f1, #8b5cf6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.gradient-bg {
+  background: linear-gradient(135deg, #f8f9fa 0%, #f3f4f6 100%);
+}
+
+/* Añade estos estilos para mejorar el glassmorphism */
+.backdrop-blur-xl {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Mejora las animaciones */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+/* Mejora las sombras */
+.shadow-2xl {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Patrón de grid usando CSS puro */
+.bg-grid-pattern {
+  background-image: linear-gradient(to right, rgba(255,255,255,.1) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(255,255,255,.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Animaciones de blob */
+@keyframes blob {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* Animación de texto flotante */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.grid-background {
+  background-image: 
+    linear-gradient(to right, #4a4a4a 1px, transparent 1px),
+    linear-gradient(to bottom, #4a4a4a 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: radial-gradient(ellipse at center, transparent 20%, black 70%);
 }

@@ -1,0 +1,103 @@
+# Dandi Design System Guidelines 🎨
+
+## UI Design Principles
+
+### 1. Glassmorphism Base
+- Use `bg-{color}-{number}/40` for transparent backgrounds
+- Always include `backdrop-blur-xl` for glass effect
+- Border style: `border-{color}-{number}/20`
+- Example: `bg-gray-900/40 backdrop-blur-xl border border-gray-800/20`
+
+### 2. Color Palette
+```css
+/* Primary Gradients */
+bg-gradient-to-r from-indigo-400 to-purple-400  /* Text gradients */
+bg-gradient-to-r from-indigo-600/20 to-purple-600/20  /* Background gradients */
+
+/* Base Colors */
+bg-gray-900  /* Dark backgrounds */
+text-gray-400  /* Regular text */
+text-indigo-400  /* Accent text */
+```
+
+### 3. Interactive Elements
+```css
+/* Hover States */
+hover:bg-gray-800/50
+hover:scale-110
+hover:text-indigo-400
+
+/* Transitions */
+transition-all duration-200 ease-in-out
+```
+
+### 4. Component Structure
+```css
+/* Container Base */
+flex items-center justify-between
+rounded-lg p-4
+backdrop-blur-xl
+
+/* Card Base */
+bg-gray-900/40
+border border-gray-800/20
+rounded-lg
+```
+
+### 5. Typography
+- Headers: `text-xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent`
+- Body: `text-gray-400 text-sm`
+- Accents: `text-indigo-400 font-medium`
+
+### 6. Animations
+```css
+/* Micro-interactions */
+transform transition-transform duration-300
+group-hover:scale-110
+
+/* State Changes */
+transition-all duration-200 ease-in-out
+```
+
+### 7. Shadows & Depth
+```css
+/* Elevation */
+shadow-lg shadow-indigo-500/25
+hover:shadow-xl hover:shadow-purple-500/20
+```
+
+## Best Practices
+
+1. Always use opacity values for background colors (`/40`, `/20`, etc.)
+2. Include `transition-all` for interactive elements
+3. Use `group` & `group-hover` for nested animations
+4. Maintain consistent border radiuses (`rounded-lg`)
+5. Implement glassmorphism with both blur and transparency
+
+## Component Examples
+
+### Button
+```css
+bg-indigo-600/20 
+text-indigo-300 
+px-6 py-2 
+rounded-lg 
+border border-indigo-500/30 
+transition-all duration-200 
+hover:bg-indigo-600/30 
+hover:scale-105
+hover:shadow-lg hover:shadow-indigo-500/25
+```
+
+### Card
+```css
+bg-gray-900/40 
+backdrop-blur-xl 
+border border-gray-800/20 
+rounded-lg p-6 
+hover:bg-gray-900/70 
+transition-all duration-300
+```
+
+---
+*Mantener consistencia en todos los componentes siguiendo estas guías*
