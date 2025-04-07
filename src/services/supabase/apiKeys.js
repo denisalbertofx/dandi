@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase';
 
 // Constantes de validación
-const API_KEY_REGEX = /^[a-zA-Z0-9]{16}-[a-zA-Z0-9]{8}-[a-zA-Z0-9]{8}-[a-zA-Z0-9]{8}-[a-zA-Z0-9]{24}$/;
+const API_KEY_REGEX = /^dk_[a-zA-Z0-9]{32}$/;
 const MAX_REQUESTS_PER_MINUTE = 60;
 const requestCounts = new Map();
 
