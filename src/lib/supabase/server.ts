@@ -5,6 +5,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
  * @returns {SupabaseClient} Cliente Supabase configurado
  */
 export function createServerSupabaseClient(): SupabaseClient {
+  // Obtener las variables de entorno
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -12,6 +13,7 @@ export function createServerSupabaseClient(): SupabaseClient {
     throw new Error('Faltan las variables de entorno de Supabase');
   }
 
+  // Crear y retornar el cliente
   return createClient(supabaseUrl, supabaseKey, {
     auth: {
       persistSession: false,
