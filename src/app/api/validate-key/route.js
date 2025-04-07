@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { apiKeysService } from '@/services/supabase/apiKeys';
+import { supabase } from '@/lib/supabase';
 
 // Configuración de CORS
 const corsHeaders = {
@@ -84,14 +85,68 @@ export async function GET(req) {
 // Manejador de POST
 export async function POST(req) {
   try {
-    const body = await req.json();
-    const apiKey = body.apiKey || req.headers.get('x-api-key');
-    return validateApiKey(apiKey);
+    const { apiKey } = await req.json();
+
+    if (!apiKey) {
+      return NextResponse.json({ 
+        isValid: false,
+        error: 'API Key no proporcionada',
+        timestamp: new Date().toISOString()
+      }, { status: 400 });
+    }
+
+    console.log('Validando API key:', {
+      keyLength: apiKey.length,
+      keyFormat: apiKey.startsWith('dk_')
+    });
+
+    const { data, error } = await supabase
+      .from('api_keys')
+      .select('id, name, is_active, created_at')
+      .eq('key', apiKey)
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error al validar API key:', error);
+      return NextResponse.json({ 
+        isValid: false,
+        error: 'Error interno al validar la API Key',
+        timestamp: new Date().toISOString()
+      }, { status: 500 });
+    }
+
+    if (data) {
+      console.log('API key válida encontrada:', {
+        keyId: data.id,
+        name: data.name,
+        isActive: data.is_active
+      });
+
+      return NextResponse.json({ 
+        isValid: true,
+        data: {
+          id: data.id,
+          name: data.name,
+          is_active: data.is_active,
+          created_at: data.created_at
+        },
+        timestamp: new Date().toISOString()
+      }, { status: 200 });
+    } else {
+      console.log('API key inválida o inactiva');
+      return NextResponse.json({ 
+        isValid: false,
+        error: 'API Key inválida o inactiva',
+        timestamp: new Date().toISOString()
+      }, { status: 401 });
+    }
   } catch (error) {
-    console.error('Error procesando request:', error);
-    return createErrorResponse(
-      'Error procesando la solicitud', 
-      500
-    );
+    console.error('Error inesperado:', error);
+    return NextResponse.json({ 
+      isValid: false,
+      error: 'Error interno del servidor',
+      timestamp: new Date().toISOString()
+    }, { status: 500 });
   }
 }
