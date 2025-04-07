@@ -10,7 +10,7 @@ export default function DeleteConfirmModal({ isOpen, onClose, onConfirm, keyName
           Confirmar Eliminación
         </h2>
         <p className="text-gray-400 mb-6">
-          ¿Estás seguro de que deseas eliminar la API Key "{keyName}"? Esta acción no se puede deshacer.
+          ¿Estás seguro de que deseas eliminar la API Key &quot;{keyName}&quot;? Esta acción no se puede deshacer.
         </p>
         <div className="flex justify-end space-x-3">
           <button
