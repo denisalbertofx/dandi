@@ -26,7 +26,7 @@ export async function OPTIONS() {
 }
 
 export async function POST(request) {
-  console.log('🔍 Iniciando validación de API key');
+  console.log('🔍 Iniciando validación de API key para GitHub Summarizer');
 
   try {
     const { apiKey } = await request.json();
@@ -36,8 +36,7 @@ export async function POST(request) {
       console.log('❌ API Key no proporcionada');
       return NextResponse.json(
         { 
-          isValid: false, 
-          error: 'API Key es requerida',
+          message: 'API Key es requerida',
           timestamp: new Date().toISOString()
         },
         { 
@@ -47,15 +46,40 @@ export async function POST(request) {
       );
     }
 
-    // Usar el mismo servicio que usa la web
-    const { isValid, data, error } = await apiKeysService.validateKey(apiKey);
+    // Validación directa con Supabase
+    const { data, error } = await supabase
+      .from('api_keys')
+      .select('id')
+      .eq('key', apiKey)
+      .eq('is_active', true)
+      .maybeSingle();
 
-    if (!isValid) {
-      console.log('⚠️ API Key inválida:', error);
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error validando API key:', error);
+      throw error;
+    }
+
+    if (data) {
+      console.log('✅ API Key válida encontrada:', {
+        id: data.id
+      });
+      
       return NextResponse.json(
         { 
-          isValid: false,
-          error: error || 'API Key inválida o inactiva',
+          message: 'Valid API key',
+          timestamp: new Date().toISOString()
+        },
+        { 
+          status: 200,
+          headers: corsHeaders
+        }
+      );
+    } else {
+      console.log('⚠️ API Key inválida o no encontrada');
+      
+      return NextResponse.json(
+        { 
+          message: 'Invalid API key',
           timestamp: new Date().toISOString()
         },
         { 
@@ -64,38 +88,11 @@ export async function POST(request) {
         }
       );
     }
-
-    console.log('✅ API Key válida encontrada:', {
-      id: data.id,
-      name: data.name,
-      isActive: data.is_active
-    });
-
-    return NextResponse.json(
-      {
-        isValid: true,
-        data: {
-          id: data.id,
-          name: data.name,
-          description: data.description,
-          key: data.key,
-          created_at: data.created_at,
-          updated_at: data.updated_at,
-          is_active: data.is_active
-        },
-        timestamp: new Date().toISOString()
-      },
-      { 
-        headers: corsHeaders
-      }
-    );
-
   } catch (error) {
     console.error('💥 Error inesperado:', error);
     return NextResponse.json(
       { 
-        isValid: false,
-        error: 'Error interno del servidor',
+        message: 'Error validating API key',
         details: error.message,
         timestamp: new Date().toISOString()
       },

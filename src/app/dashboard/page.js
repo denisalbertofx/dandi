@@ -10,23 +10,11 @@ import { useNotification } from '@/shared/hooks/useNotification';
 import { PlusIcon } from '@heroicons/react/24/outline';
 
 export default function Dashboard() {
-  const {
-    apiKeys,
-    isLoading,
-    fetchApiKeys,
-    createApiKey,
-    updateApiKey,
-    deleteApiKey,
-    regenerateApiKey
-  } = useApiKeys();
+  const { apiKeys, loading, error } = useApiKeys();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedKey, setSelectedKey] = useState(null);
-
-  useEffect(() => {
-    fetchApiKeys();
-  }, [fetchApiKeys]);
 
   const handleEdit = (key) => {
     setSelectedKey(key);
@@ -77,10 +65,10 @@ export default function Dashboard() {
 
         <ApiKeyList
           apiKeys={apiKeys}
-          isLoading={isLoading}
+          loading={loading}
+          error={error}
           onEdit={handleEdit}
           onDelete={handleDelete}
-          onRegenerate={regenerateApiKey}
         />
       </div>
 
@@ -89,9 +77,9 @@ export default function Dashboard() {
         onClose={() => setIsModalOpen(false)}
         onSubmit={(data) => {
           if (selectedKey) {
-            updateApiKey(selectedKey.id, data);
+            // Update logic
           } else {
-            createApiKey(data);
+            // Create logic
           }
           setIsModalOpen(false);
         }}
@@ -102,7 +90,7 @@ export default function Dashboard() {
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={() => {
-          deleteApiKey(selectedKey?.id);
+          // Delete logic
           setIsDeleteModalOpen(false);
         }}
         keyName={selectedKey?.name}

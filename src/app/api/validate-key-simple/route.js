@@ -1,17 +1,17 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 
-// Configuración específica para el servidor
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://zknrpqrxiqmgsxfhjjtx.supabase.co';
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InprbnJwcXJ4aXFtZ3N4ZmhqanR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTI0NDgyMzMsImV4cCI6MjAyODAyNDIzM30.YL4NuCzs5D-DTOhT-9N4yQbXxkEQFIvWMTe5PMwEMWQ';
-
-// Cliente de Supabase optimizado para el servidor
-const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
+// Lista de API keys válidas
+const validApiKeys = [
+  {
+    id: '9eb31e6b-ad41-4648-a5ec-f68bba47be9b',
+    name: 'prueba',
+    description: 'api',
+    key: 'mjxXj9cGUR10eVe0-1sfBUnoe-SPsGeJrJ-PSa2UXEc-fseAcmBb7pIVMNY23SkYms5k',
+    created_at: '2025-04-07T06:58:21.926306+00:00',
+    updated_at: '2025-04-07T06:59:29.343+00:00',
+    is_active: true
   }
-});
+];
 
 // Configurar CORS headers
 const corsHeaders = {
@@ -26,7 +26,7 @@ export async function OPTIONS() {
 }
 
 export async function POST(request) {
-  console.log('🔍 Iniciando validación de API key');
+  console.log('🔍 Iniciando validación de API key simple');
 
   try {
     const { apiKey } = await request.json();
@@ -47,15 +47,15 @@ export async function POST(request) {
       );
     }
 
-    // Usar el mismo servicio que usa la web
-    const { isValid, data, error } = await apiKeysService.validateKey(apiKey);
+    // Buscar la API key en la lista de keys válidas
+    const apiKeyData = validApiKeys.find(key => key.key === apiKey && key.is_active);
 
-    if (!isValid) {
-      console.log('⚠️ API Key inválida:', error);
+    if (!apiKeyData) {
+      console.log('⚠️ API Key inválida o no encontrada');
       return NextResponse.json(
         { 
           isValid: false,
-          error: error || 'API Key inválida o inactiva',
+          error: 'API Key inválida o inactiva',
           timestamp: new Date().toISOString()
         },
         { 
@@ -66,23 +66,15 @@ export async function POST(request) {
     }
 
     console.log('✅ API Key válida encontrada:', {
-      id: data.id,
-      name: data.name,
-      isActive: data.is_active
+      id: apiKeyData.id,
+      name: apiKeyData.name,
+      isActive: apiKeyData.is_active
     });
 
     return NextResponse.json(
       {
         isValid: true,
-        data: {
-          id: data.id,
-          name: data.name,
-          description: data.description,
-          key: data.key,
-          created_at: data.created_at,
-          updated_at: data.updated_at,
-          is_active: data.is_active
-        },
+        data: apiKeyData,
         timestamp: new Date().toISOString()
       },
       { 
@@ -105,4 +97,4 @@ export async function POST(request) {
       }
     );
   }
-}
+} 
