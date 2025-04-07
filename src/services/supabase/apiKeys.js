@@ -7,6 +7,12 @@ const requestCounts = new Map();
 
 // Función para validar el formato de la API Key
 function isValidApiKeyFormat(apiKey) {
+  console.log('Validando formato de API key:', {
+    apiKey,
+    length: apiKey.length,
+    expectedLength: 35, // dk_ (3) + 32 caracteres
+    matchesRegex: API_KEY_REGEX.test(apiKey)
+  });
   return API_KEY_REGEX.test(apiKey);
 }
 
