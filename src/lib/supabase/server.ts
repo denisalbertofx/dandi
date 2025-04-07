@@ -1,10 +1,10 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Crea un cliente Supabase optimizado para el entorno del servidor
- * @returns {object} Cliente Supabase configurado
+ * @returns {SupabaseClient} Cliente Supabase configurado
  */
-export function createServerSupabaseClient() {
+export function createServerSupabaseClient(): SupabaseClient {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -21,13 +21,13 @@ export function createServerSupabaseClient() {
 }
 
 // Cliente Supabase singleton para uso en el servidor
-let supabaseServerClient = null;
+let supabaseServerClient: SupabaseClient | null = null;
 
 /**
  * Obtiene una instancia singleton del cliente Supabase para el servidor
- * @returns {object} Cliente Supabase
+ * @returns {SupabaseClient} Cliente Supabase
  */
-export function getServerSupabaseClient() {
+export function getServerSupabaseClient(): SupabaseClient {
   if (!supabaseServerClient) {
     supabaseServerClient = createServerSupabaseClient();
   }
