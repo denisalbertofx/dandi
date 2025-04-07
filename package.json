@@ -11,12 +11,17 @@
   "dependencies": {
     "@headlessui/react": "^2.2.1",
     "@heroicons/react": "^2.2.0",
+    "@langchain/community": "^0.3.39",
+    "@langchain/core": "^0.3.43",
+    "@langchain/openai": "^0.5.4",
     "@supabase/supabase-js": "^2.49.4",
     "framer-motion": "^12.6.3",
+    "langchain": "^0.3.20",
     "next": "15.2.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-toastify": "^11.0.5"
+    "react-toastify": "^11.0.5",
+    "typescript": "^5.8.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

@@ -63,17 +63,54 @@ export const apiKeysService = {
   },
 
   async validateKey(apiKey) {
-    const { data, error } = await supabase
-      .from('api_keys')
-      .select('*')
-      .eq('key', apiKey)
-      .eq('is_active', true)
-      .single();
-
-    if (error) {
-      return { isValid: false, error: error.message };
+    // Validación básica del formato
+    if (!apiKey || typeof apiKey !== 'string' || apiKey.length < 32) {
+      return { 
+        isValid: false, 
+        error: 'Formato de API Key inválido' 
+      };
     }
 
-    return { isValid: true, data };
+    try {
+      const { data, error } = await supabase
+        .from('api_keys')
+        .select('*')
+        .eq('key', apiKey)
+        .eq('is_active', true)
+        .single();
+
+      // Si hay error O no hay datos, la key es inválida
+      if (error || !data) {
+        return { 
+          isValid: false, 
+          error: 'API Key inválida o no encontrada' 
+        };
+      }
+
+      // Verificación adicional de que la key existe y está activa
+      if (!data.is_active) {
+        return {
+          isValid: false,
+          error: 'API Key inactiva'
+        };
+      }
+
+      return { 
+        isValid: true, 
+        data: {
+          id: data.id,
+          name: data.name,
+          is_active: data.is_active,
+          created_at: data.created_at,
+          updated_at: data.updated_at
+        } 
+      };
+    } catch (error) {
+      console.error('Error validando API key:', error);
+      return { 
+        isValid: false, 
+        error: 'Error al validar la API Key' 
+      };
+    }
   }
 }; 
