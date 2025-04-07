@@ -1,14 +1,16 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Configuración específica para el servidor
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://zknrpqrxiqmgsxfhjjtx.supabase.co';
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InprbnJwcXJ4aXFtZ3N4ZmhqanR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTI0NDgyMzMsImV4cCI6MjAyODAyNDIzM30.YL4NuCzs5D-DTOhT-9N4yQbXxkEQFIvWMTe5PMwEMWQ';
+// Cliente de Supabase simple
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-// Cliente de Supabase optimizado para el servidor
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('Faltan las variables de entorno de Supabase');
+}
+
 const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
-    autoRefreshToken: false,
     persistSession: false
   }
 });
@@ -26,80 +28,69 @@ export async function OPTIONS() {
 }
 
 export async function POST(request) {
-  console.log('🔍 Iniciando validación de API key para GitHub Summarizer');
-
   try {
     const { apiKey } = await request.json();
-    console.log('API Key recibida:', apiKey);
-
+    
     if (!apiKey) {
-      console.log('❌ API Key no proporcionada');
-      return NextResponse.json(
-        { 
-          message: 'API Key es requerida',
-          timestamp: new Date().toISOString()
-        },
-        { 
-          status: 400,
-          headers: corsHeaders
-        }
-      );
+      return NextResponse.json({ 
+        message: 'API Key es requerida',
+        timestamp: new Date().toISOString()
+      }, { 
+        status: 400,
+        headers: corsHeaders
+      });
     }
 
-    // Validación directa con Supabase
+    // Validación simple de la API key
     const { data, error } = await supabase
       .from('api_keys')
-      .select('id')
+      .select('*')
       .eq('key', apiKey)
-      .eq('is_active', true)
       .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') {
-      console.error('Error validando API key:', error);
-      throw error;
-    }
-
-    if (data) {
-      console.log('✅ API Key válida encontrada:', {
-        id: data.id
-      });
-      
-      return NextResponse.json(
-        { 
-          message: 'Valid API key',
-          timestamp: new Date().toISOString()
-        },
-        { 
-          status: 200,
-          headers: corsHeaders
-        }
-      );
-    } else {
-      console.log('⚠️ API Key inválida o no encontrada');
-      
-      return NextResponse.json(
-        { 
-          message: 'Invalid API key',
-          timestamp: new Date().toISOString()
-        },
-        { 
-          status: 401,
-          headers: corsHeaders
-        }
-      );
-    }
-  } catch (error) {
-    console.error('💥 Error inesperado:', error);
-    return NextResponse.json(
-      { 
-        message: 'Error validating API key',
+    if (error) {
+      console.error('Error de Supabase:', error);
+      return NextResponse.json({ 
+        message: 'Error al validar API key',
         details: error.message,
         timestamp: new Date().toISOString()
-      },
-      { 
+      }, { 
         status: 500,
         headers: corsHeaders
-      }
-    );
+      });
+    }
+
+    if (!data) {
+      return NextResponse.json({ 
+        message: 'API Key no encontrada',
+        timestamp: new Date().toISOString()
+      }, { 
+        status: 404,
+        headers: corsHeaders
+      });
+    }
+
+    return NextResponse.json({ 
+      message: 'API Key válida',
+      data: {
+        id: data.id,
+        name: data.name,
+        is_active: data.is_active
+      },
+      timestamp: new Date().toISOString()
+    }, { 
+      headers: corsHeaders
+    });
+
+  } catch (error) {
+    console.error('Error inesperado:', error);
+    return NextResponse.json({ 
+      message: 'Error interno del servidor',
+      details: error.message,
+      timestamp: new Date().toISOString()
+    }, { 
+      status: 500,
+      headers: corsHeaders
+    });
   }
 }
