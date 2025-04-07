@@ -11,8 +11,8 @@ const corsHeaders = {
 // Función para validar el formato de la API key
 const isValidApiKeyFormat = (apiKey) => {
   if (!apiKey || typeof apiKey !== 'string') return false;
-  // Verifica el formato básico de la API key
-  return apiKey.split('-').length === 4;
+  // Verifica el formato: dk_ seguido de 32 caracteres alfanuméricos
+  return /^dk_[a-zA-Z0-9]{32}$/.test(apiKey);
 };
 
 // Función para crear respuesta de error

@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase';
 
 // Constantes de validación
-const API_KEY_REGEX = /^dk_[a-zA-Z0-9]{32}$/;
+const API_KEY_REGEX = /^[a-zA-Z0-9]{16}-[a-zA-Z0-9]{8}-[a-zA-Z0-9]{8}-[a-zA-Z0-9]{8}-[a-zA-Z0-9]{24}$/;
 const MAX_REQUESTS_PER_MINUTE = 60;
 const requestCounts = new Map();
 
@@ -25,6 +25,23 @@ function checkRateLimit(apiKey) {
   // Limpiar entradas antiguas cada minuto
   setTimeout(() => requestCounts.delete(key), 60000);
   return true;
+}
+
+// Función para convertir API keys antiguas al nuevo formato
+function convertToNewFormat(oldKey) {
+  // Si ya está en el nuevo formato, retornarlo tal cual
+  if (/^dk_[a-zA-Z0-9]{32}$/.test(oldKey)) {
+    return oldKey;
+  }
+  
+  // Convertir del formato antiguo al nuevo
+  const parts = oldKey.split('-');
+  if (parts.length === 5) {
+    const randomPart = parts.join(''); // Unir todas las partes
+    return `dk_${randomPart.substring(0, 32)}`; // Tomar solo los primeros 32 caracteres
+  }
+  
+  return oldKey; // Si no reconocemos el formato, devolver la key original
 }
 
 export const apiKeysService = {
@@ -91,6 +108,9 @@ export const apiKeysService = {
 
   async validateKey(apiKey) {
     try {
+      // Intentar convertir al nuevo formato
+      const normalizedKey = convertToNewFormat(apiKey);
+      
       // Validar inicialización de Supabase
       if (!supabase) {
         console.error('Error de validación: Cliente Supabase no inicializado');
@@ -102,8 +122,8 @@ export const apiKeysService = {
       }
 
       // Validar formato de API Key
-      if (!isValidApiKeyFormat(apiKey)) {
-        console.warn('API Key con formato inválido:', apiKey);
+      if (!isValidApiKeyFormat(normalizedKey)) {
+        console.warn('API Key con formato inválido:', normalizedKey);
         return { 
           isValid: false, 
           error: 'Formato de API Key inválido',
@@ -112,8 +132,8 @@ export const apiKeysService = {
       }
 
       // Verificar rate limit
-      if (!checkRateLimit(apiKey)) {
-        console.warn('Rate limit excedido para API Key:', apiKey);
+      if (!checkRateLimit(normalizedKey)) {
+        console.warn('Rate limit excedido para API Key:', normalizedKey);
         return {
           isValid: false,
           error: 'Demasiadas solicitudes. Por favor, intenta más tarde.',
@@ -125,7 +145,7 @@ export const apiKeysService = {
       const { data, error } = await supabase
         .from('api_keys')
         .select('*')
-        .eq('key', apiKey)
+        .eq('key', normalizedKey)
         .eq('is_active', true)
         .single();
       const duration = Date.now() - start;
@@ -144,7 +164,7 @@ export const apiKeysService = {
       }
 
       if (!data) {
-        console.warn('API Key no encontrada:', apiKey);
+        console.warn('API Key no encontrada:', normalizedKey);
         return { 
           isValid: false, 
           error: 'API Key no encontrada o inactiva',
