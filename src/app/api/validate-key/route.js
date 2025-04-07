@@ -19,6 +19,7 @@ export async function POST(request) {
     const { apiKey } = await request.json();
 
     if (!apiKey) {
+      console.log('❌ API Key no proporcionada');
       return NextResponse.json(
         { 
           isValid: false, 
@@ -32,7 +33,19 @@ export async function POST(request) {
       );
     }
 
-    console.log('🔍 Consultando API key en Supabase');
+    console.log('🔍 Consultando API key:', {
+      keyLength: apiKey.length,
+      keyFormat: apiKey.includes('-')
+    });
+
+    // Primera consulta para debugging
+    const { count } = await supabaseServer
+      .from('api_keys')
+      .select('*', { count: 'exact' });
+    
+    console.log(`📊 Total de API keys en la base de datos: ${count}`);
+
+    // Consulta principal
     const { data, error } = await supabaseServer
       .from('api_keys')
       .select('*')
@@ -47,6 +60,11 @@ export async function POST(request) {
           isValid: false,
           error: 'Error al validar la API Key',
           details: error.message,
+          debug: {
+            errorCode: error.code,
+            hint: error.hint,
+            details: error.details
+          },
           timestamp: new Date().toISOString()
         },
         { 
@@ -58,10 +76,22 @@ export async function POST(request) {
 
     if (!data) {
       console.log('⚠️ API Key no encontrada o inactiva');
+      
+      // Consulta adicional para debugging
+      const keyExists = await supabaseServer
+        .from('api_keys')
+        .select('is_active')
+        .eq('key', apiKey)
+        .single();
+      
       return NextResponse.json(
         { 
           isValid: false,
           error: 'API Key inválida o inactiva',
+          debug: {
+            exists: !!keyExists.data,
+            isActive: keyExists.data?.is_active
+          },
           timestamp: new Date().toISOString()
         },
         { 
@@ -71,7 +101,12 @@ export async function POST(request) {
       );
     }
 
-    console.log('✅ API Key válida encontrada');
+    console.log('✅ API Key válida encontrada:', {
+      id: data.id,
+      name: data.name,
+      isActive: data.is_active
+    });
+
     return NextResponse.json(
       {
         isValid: true,
@@ -80,9 +115,9 @@ export async function POST(request) {
           name: data.name,
           description: data.description,
           created_at: data.created_at,
-          updated_at: data.updated_at,
-          timestamp: new Date().toISOString()
-        }
+          updated_at: data.updated_at
+        },
+        timestamp: new Date().toISOString()
       },
       { 
         headers: corsHeaders
