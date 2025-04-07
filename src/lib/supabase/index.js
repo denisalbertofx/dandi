@@ -2,21 +2,24 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-if (
-  !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-) {
-  console.warn(
-    'Las variables de entorno de Supabase no están configuradas. Por favor, configura NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY en tu archivo .env.local'
-  );
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Faltan las variables de entorno de Supabase');
 }
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-  },
-}); 
+// Función de ayuda para validar la conexión
+export async function validateSupabaseConnection() {
+  try {
+    const { data, error } = await supabase.from('api_keys').select('count');
+    if (error) throw error;
+    console.log('Conexión a Supabase establecida correctamente');
+    return true;
+  } catch (error) {
+    console.error('Error conectando con Supabase:', error);
+    return false;
+  }
+} 

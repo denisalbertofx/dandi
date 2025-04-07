@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { supabase, validateSupabaseConnection } from '@/lib/supabase';
 import { apiKeysService } from '@/services/supabase/apiKeys';
 
 // Configuración de CORS
@@ -26,6 +27,15 @@ const handleError = (error) => {
 
 // Función común para validar la API key
 async function validateApiKey(apiKey) {
+  // Primero validamos la conexión
+  const isConnected = await validateSupabaseConnection();
+  if (!isConnected) {
+    return NextResponse.json(
+      { isValid: false, error: 'Error de conexión con la base de datos' },
+      { status: 500, headers: corsHeaders }
+    );
+  }
+
   // Validación de formato
   if (!apiKey || typeof apiKey !== 'string') {
     return NextResponse.json(
