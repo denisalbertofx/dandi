@@ -1,17 +1,19 @@
 import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
-// Lista de API keys válidas
-const validApiKeys = [
-  {
-    id: '9eb31e6b-ad41-4648-a5ec-f68bba47be9b',
-    name: 'prueba',
-    description: 'api',
-    key: 'mjxXj9cGUR10eVe0-1sfBUnoe-SPsGeJrJ-PSa2UXEc-fseAcmBb7pIVMNY23SkYms5k',
-    created_at: '2025-04-07T06:58:21.926306+00:00',
-    updated_at: '2025-04-07T06:59:29.343+00:00',
-    is_active: true
+// Cliente de Supabase simple
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('Faltan las variables de entorno de Supabase');
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: false
   }
-];
+});
 
 // Configurar CORS headers
 const corsHeaders = {
@@ -26,75 +28,51 @@ export async function OPTIONS() {
 }
 
 export async function POST(request) {
-  console.log('🔍 Iniciando validación de API key simple');
-
   try {
     const { apiKey } = await request.json();
-    console.log('API Key recibida:', apiKey);
-
+    
     if (!apiKey) {
-      console.log('❌ API Key no proporcionada');
-      return NextResponse.json(
-        { 
-          isValid: false, 
-          error: 'API Key es requerida',
-          timestamp: new Date().toISOString()
-        },
-        { 
-          status: 400,
-          headers: corsHeaders
-        }
-      );
+      return NextResponse.json({ isValid: false, error: 'API Key es requerida' }, { status: 400 });
     }
 
-    // Buscar la API key en la lista de keys válidas
-    const apiKeyData = validApiKeys.find(key => key.key === apiKey && key.is_active);
+    // Validación simple de la API key
+    const { data, error } = await supabase
+      .from('api_keys')
+      .select('*')
+      .eq('key', apiKey)
+      .maybeSingle();
 
-    if (!apiKeyData) {
-      console.log('⚠️ API Key inválida o no encontrada');
-      return NextResponse.json(
-        { 
-          isValid: false,
-          error: 'API Key inválida o inactiva',
-          timestamp: new Date().toISOString()
-        },
-        { 
-          status: 401,
-          headers: corsHeaders
-        }
-      );
+    if (error) {
+      console.error('Error de Supabase:', error);
+      return NextResponse.json({ 
+        isValid: false, 
+        error: 'Error al validar API key',
+        details: error.message 
+      }, { status: 500 });
     }
 
-    console.log('✅ API Key válida encontrada:', {
-      id: apiKeyData.id,
-      name: apiKeyData.name,
-      isActive: apiKeyData.is_active
+    if (!data) {
+      return NextResponse.json({ 
+        isValid: false, 
+        error: 'API Key no encontrada' 
+      }, { status: 404 });
+    }
+
+    return NextResponse.json({ 
+      isValid: true,
+      data: {
+        id: data.id,
+        name: data.name,
+        is_active: data.is_active
+      }
     });
 
-    return NextResponse.json(
-      {
-        isValid: true,
-        data: apiKeyData,
-        timestamp: new Date().toISOString()
-      },
-      { 
-        headers: corsHeaders
-      }
-    );
-
   } catch (error) {
-    console.error('💥 Error inesperado:', error);
-    return NextResponse.json(
-      { 
-        isValid: false,
-        error: 'Error interno del servidor',
-        details: error.message,
-        timestamp: new Date().toISOString()
-      },
-      { 
-        status: 500,
-        headers: corsHeaders
-      }
-    );
+    console.error('Error inesperado:', error);
+    return NextResponse.json({ 
+      isValid: false, 
+      error: 'Error interno del servidor',
+      details: error.message 
+    }, { status: 500 });
   }
 } 
