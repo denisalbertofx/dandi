@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabaseServer } from '@/lib/supabase/server';
+import { apiKeysService } from '@/services/supabase/apiKeys';
 
 // Headers CORS siguiendo el patrón del proyecto de referencia
 const corsHeaders = {
@@ -33,65 +33,15 @@ export async function POST(request) {
       );
     }
 
-    console.log('🔍 Consultando API key:', {
-      keyLength: apiKey.length,
-      keyFormat: apiKey.includes('-')
-    });
+    // Usar el mismo servicio que usa la web
+    const { isValid, data, error } = await apiKeysService.validateKey(apiKey);
 
-    // Primera consulta para debugging
-    const { count } = await supabaseServer
-      .from('api_keys')
-      .select('*', { count: 'exact' });
-    
-    console.log(`📊 Total de API keys en la base de datos: ${count}`);
-
-    // Consulta principal
-    const { data, error } = await supabaseServer
-      .from('api_keys')
-      .select('*')
-      .eq('key', apiKey)
-      .eq('is_active', true)
-      .single();
-
-    if (error) {
-      console.error('❌ Error de Supabase:', error);
+    if (!isValid) {
+      console.log('⚠️ API Key inválida:', error);
       return NextResponse.json(
         { 
           isValid: false,
-          error: 'Error al validar la API Key',
-          details: error.message,
-          debug: {
-            errorCode: error.code,
-            hint: error.hint,
-            details: error.details
-          },
-          timestamp: new Date().toISOString()
-        },
-        { 
-          status: 500,
-          headers: corsHeaders
-        }
-      );
-    }
-
-    if (!data) {
-      console.log('⚠️ API Key no encontrada o inactiva');
-      
-      // Consulta adicional para debugging
-      const keyExists = await supabaseServer
-        .from('api_keys')
-        .select('is_active')
-        .eq('key', apiKey)
-        .single();
-      
-      return NextResponse.json(
-        { 
-          isValid: false,
-          error: 'API Key inválida o inactiva',
-          debug: {
-            exists: !!keyExists.data,
-            isActive: keyExists.data?.is_active
-          },
+          error: error || 'API Key inválida o inactiva',
           timestamp: new Date().toISOString()
         },
         { 
@@ -114,8 +64,10 @@ export async function POST(request) {
           id: data.id,
           name: data.name,
           description: data.description,
+          key: data.key,
           created_at: data.created_at,
-          updated_at: data.updated_at
+          updated_at: data.updated_at,
+          is_active: data.is_active
         },
         timestamp: new Date().toISOString()
       },
