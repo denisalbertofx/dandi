@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { apiKeysService } from '@/services/supabase/apiKeys';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/server';
 
 // Configuración de CORS
 const corsHeaders = {
